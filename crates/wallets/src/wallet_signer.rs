@@ -1,4 +1,4 @@
-use crate::error::WalletSignerError;
+use crate::{error::WalletSignerError, yubikey::YubikeySignerStub};
 use alloy_consensus::SignableTransaction;
 use alloy_dyn_abi::TypedData;
 use alloy_network::TxSigner;
@@ -25,6 +25,8 @@ use {
 
 pub type Result<T> = std::result::Result<T, WalletSignerError>;
 
+type YubikeySigner = YubikeySignerStub;
+
 /// Wrapper enum around different signers.
 #[derive(Debug)]
 pub enum WalletSigner {
@@ -34,6 +36,8 @@ pub enum WalletSigner {
     Ledger(LedgerSigner),
     /// Wrapper around Trezor signer.
     Trezor(TrezorSigner),
+    /// Wrapper around yubikey
+    Yubikey(YubikeySigner),
     /// Wrapper around AWS KMS signer.
     #[cfg(feature = "aws-kms")]
     Aws(AwsSigner),
@@ -51,6 +55,11 @@ impl WalletSigner {
     pub async fn from_trezor_path(path: TrezorHDPath) -> Result<Self> {
         let trezor = TrezorSigner::new(path, None).await?;
         Ok(Self::Trezor(trezor))
+    }
+
+    pub async fn yubikey() -> Result<Self> {
+        let yubikey = YubikeySigner::new().await?;
+        Ok(Self::Yubikey(yubikey))
     }
 
     pub async fn from_aws(key_id: String) -> Result<Self> {
@@ -147,6 +156,11 @@ impl WalletSigner {
                     }
                 }
             }
+            Self::Yubikey(yubikey) => {
+                if let Ok(address) = yubikey.get_address().await {
+                    senders.push(address);
+                }
+            }
             #[cfg(feature = "aws-kms")]
             Self::Aws(aws) => {
                 senders.push(alloy_signer::Signer::address(aws));
@@ -187,6 +201,7 @@ macro_rules! delegate {
             Self::Local($inner) => $e,
             Self::Ledger($inner) => $e,
             Self::Trezor($inner) => $e,
+            Self::Yubikey($inner) => $e,
             #[cfg(feature = "aws-kms")]
             Self::Aws($inner) => $e,
             #[cfg(feature = "gcp-kms")]

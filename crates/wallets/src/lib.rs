@@ -14,6 +14,7 @@ pub mod raw_wallet;
 pub mod utils;
 pub mod wallet;
 pub mod wallet_signer;
+pub mod yubikey;
 
 pub use multi_wallet::MultiWalletOpts;
 pub use raw_wallet::RawWalletOpts;
