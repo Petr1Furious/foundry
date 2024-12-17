@@ -1,9 +1,9 @@
-use crate::{error::PrivateKeyError, yubikey::YubikeySignerStub, PendingSigner, WalletSigner};
+use crate::{error::PrivateKeyError, PendingSigner, WalletSigner};
 use alloy_primitives::{hex::FromHex, B256};
 use alloy_signer_ledger::HDPath as LedgerHDPath;
 use alloy_signer_local::PrivateKeySigner;
 use alloy_signer_trezor::HDPath as TrezorHDPath;
-use eyre::{Context, Result};
+use eyre::{Context, ContextCompat, Result};
 use foundry_config::Config;
 use std::{
     fs,
@@ -68,8 +68,17 @@ Make sure it's connected and unlocked, with no other desktop wallet apps open."
     })
 }
 
-pub async fn create_yubikey_signer() -> Result<WalletSigner> {
-    Ok(WalletSigner::Yubikey(YubikeySignerStub::new().await?))
+/// Creates [WalletSigner] instance from given YubiKey parameters
+pub async fn create_yubikey_signer(hd_path: Option<&str>, _mnemonic_index: u32) -> Result<WalletSigner> {
+    let hd_path = hd_path.map(|s| s.as_bytes().to_vec()).wrap_err_with(|| {
+        "\
+        HD path must be specified for YubiKey device."
+    })?;
+    
+    WalletSigner::from_yubikey_path(hd_path).await.wrap_err_with(|| {
+        "\
+        Could not connect to YubiKey device."
+    })
 }
 
 /// Creates [WalletSigner] instance from given Trezor parameters.

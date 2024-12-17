@@ -14,10 +14,12 @@ pub type Result<T> = std::result::Result<T, WalletSignerError>;
 pub struct YubikeySignerStub {
 }
 
+pub type YubikeyHDPath = Vec<u8>;
+
 impl YubikeySignerStub {
-    // Need some params?
-    pub async fn new() -> Result<Self> {
-        Ok(Self {})
+    // create signer and store address specified in `hd_path`
+    pub async fn from_hd_path(hd_path: YubikeyHDPath) -> Result<Self> {
+        todo!()
     }
 
     pub async fn get_address(&self) -> Result<Address> {

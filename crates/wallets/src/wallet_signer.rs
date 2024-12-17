@@ -1,4 +1,4 @@
-use crate::{error::WalletSignerError, yubikey::YubikeySignerStub};
+use crate::{error::WalletSignerError, yubikey::{YubikeyHDPath, YubikeySignerStub}};
 use alloy_consensus::SignableTransaction;
 use alloy_dyn_abi::TypedData;
 use alloy_network::TxSigner;
@@ -57,8 +57,8 @@ impl WalletSigner {
         Ok(Self::Trezor(trezor))
     }
 
-    pub async fn yubikey() -> Result<Self> {
-        let yubikey = YubikeySigner::new().await?;
+    pub async fn from_yubikey_path(path: YubikeyHDPath) -> Result<Self> {
+        let yubikey = YubikeySigner::from_hd_path(path).await?;
         Ok(Self::Yubikey(yubikey))
     }
 

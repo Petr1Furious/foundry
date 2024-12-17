@@ -382,8 +382,8 @@ impl MultiWalletOpts {
 
     pub async fn yubikeys(&self) -> Result<Option<Vec<WalletSigner>>> {
         if self.yubikey {
-            let signer = utils::create_yubikey_signer().await?;
-            Ok(Some(vec![signer]))
+            create_hw_wallets!(self, utils::create_yubikey_signer, wallets);
+            Ok(Some(wallets))
         } else {
             Ok(None)
         }
