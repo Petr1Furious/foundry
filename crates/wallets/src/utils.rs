@@ -1,4 +1,4 @@
-use crate::{error::PrivateKeyError, PendingSigner, WalletSigner};
+use crate::{error::PrivateKeyError, yubikey::YubikeySignerStub, PendingSigner, WalletSigner};
 use alloy_primitives::{hex::FromHex, B256};
 use alloy_signer_ledger::HDPath as LedgerHDPath;
 use alloy_signer_local::PrivateKeySigner;
@@ -69,7 +69,7 @@ Make sure it's connected and unlocked, with no other desktop wallet apps open."
 }
 
 pub async fn create_yubikey_signer() -> Result<WalletSigner> {
-    unimplemented!("No yubikey");
+    Ok(WalletSigner::Yubikey(YubikeySignerStub::new().await?))
 }
 
 /// Creates [WalletSigner] instance from given Trezor parameters.

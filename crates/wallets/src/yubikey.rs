@@ -31,24 +31,12 @@ impl alloy_network::TxSigner<PrimitiveSignature> for YubikeySignerStub {
         unimplemented!("address: unimplemented")
     }
 
-    // Should allow to sign transaction
-    // #[inline]
-    // #[doc(alias = "sign_tx")]
-    // async fn sign_transaction(
-    //     &self,
-    //     _tx: &mut dyn SignableTransaction<PrimitiveSignature>,
-    // ) -> Result<PrimitiveSignature> {
-    //     unimplemented!("sign_transaction: unimplemented")
-    // }
-
     #[inline]
     async fn sign_transaction(
         &self,
         _tx: &mut dyn SignableTransaction<PrimitiveSignature>,
     ) -> alloy_signer::Result<PrimitiveSignature> {
         unimplemented!()
-        // let encoded = tx.encoded_for_signing();
-        // Ok(PrimitiveSignature::from_bytes_and_parity(encoded.as_slice(), false))
     }
 }
 
