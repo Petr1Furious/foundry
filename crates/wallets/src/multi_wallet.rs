@@ -218,6 +218,9 @@ pub struct MultiWalletOpts {
     #[arg(long, short, help_heading = "Wallet options - hardware wallet")]
     pub trezor: bool,
 
+    #[arg(long, short, help_heading = "Wallet options - hardware wallet")]
+    pub yubikey: bool,
+
     /// Use AWS Key Management Service.
     #[arg(long, help_heading = "Wallet options - remote", hide = !cfg!(feature = "aws-kms"))]
     pub aws: bool,
@@ -231,6 +234,9 @@ impl MultiWalletOpts {
 
         if let Some(ledgers) = self.ledgers().await? {
             signers.extend(ledgers);
+        }
+        if let Some(yubis) = self.yubikeys().await? {
+            signers.extend(yubis);
         }
         if let Some(trezors) = self.trezors().await? {
             signers.extend(trezors);
@@ -372,6 +378,10 @@ impl MultiWalletOpts {
             return Ok(Some(wallets));
         }
         Ok(None)
+    }
+
+    pub async fn yubikeys(&self) -> Result<Option<Vec<WalletSigner>>> {
+        unimplemented!("No yubikey in self.yubikey");
     }
 
     pub async fn aws_signers(&self) -> Result<Option<Vec<WalletSigner>>> {

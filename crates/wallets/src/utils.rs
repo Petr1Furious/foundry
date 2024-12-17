@@ -68,6 +68,10 @@ Make sure it's connected and unlocked, with no other desktop wallet apps open."
     })
 }
 
+pub async fn create_yubikey_signer() -> Result<WalletSigner> {
+    unimplemented!("No yubikey");
+}
+
 /// Creates [WalletSigner] instance from given Trezor parameters.
 pub async fn create_trezor_signer(
     hd_path: Option<&str>,
