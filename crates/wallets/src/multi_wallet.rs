@@ -235,6 +235,9 @@ impl MultiWalletOpts {
         if let Some(ledgers) = self.ledgers().await? {
             signers.extend(ledgers);
         }
+        if let Some(yubis) = self.yubikeys().await? {
+            signers.extend(yubis);
+        }
         if let Some(trezors) = self.trezors().await? {
             signers.extend(trezors);
         }
@@ -378,12 +381,7 @@ impl MultiWalletOpts {
     }
 
     pub async fn yubikeys(&self) -> Result<Option<Vec<WalletSigner>>> {
-        if self.yubikey {
-            unimplemented!("No yubikey");
-            // Ok(None);
-        }
-
-        Ok(None);
+        unimplemented!("No yubikey in self.yubikey");
     }
 
     pub async fn aws_signers(&self) -> Result<Option<Vec<WalletSigner>>> {
