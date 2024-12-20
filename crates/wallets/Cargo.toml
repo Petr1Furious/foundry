@@ -14,6 +14,8 @@ workspace = true
 
 [dependencies]
 foundry-config.workspace = true
+secp256k1 = { version = "0.21", features = ["recovery", "rand"] }
+rand = "0.8"
 
 alloy-primitives.workspace = true
 alloy-signer = { workspace = true, features = ["eip712"] }
