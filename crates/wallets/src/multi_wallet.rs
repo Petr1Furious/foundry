@@ -218,6 +218,7 @@ pub struct MultiWalletOpts {
     #[arg(long, short, help_heading = "Wallet options - hardware wallet")]
     pub trezor: bool,
 
+    /// Use a Yubikey hardware wallet.
     #[arg(long, short, help_heading = "Wallet options - hardware wallet")]
     pub yubikey: bool,
 

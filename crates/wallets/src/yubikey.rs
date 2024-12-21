@@ -40,24 +40,6 @@ impl YubikeySignerStub {
     pub async fn get_address(&self) -> Result<Address> {
         Ok(self.addr)
     }
-
-    // helper which converts a derivation path to [u32]
-    fn convert_path(derivation: &[u8]) -> Vec<u32> {
-        let derivation = core::str::from_utf8(derivation).unwrap();
-        let elements = derivation.split('/').skip(1).collect::<Vec<_>>();
-
-        let mut path = vec![];
-        for derivation_index in elements {
-            let hardened = derivation_index.contains('\'');
-            let mut index = derivation_index.replace('\'', "").parse::<u32>().unwrap();
-            if hardened {
-                index |= 0x80000000;
-            }
-            path.push(index);
-        }
-
-        path
-    }
 }
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
