@@ -67,7 +67,8 @@ impl Signer for YubikeySignerStub {
             return Err(alloy_signer::Error::Other(Box::<dyn std::error::Error + Send + Sync + 'static>::from(stderr.to_string())));
         }
         
-        let signature = Signature::from_compact(output.stdout.as_slice()).expect("Invalid signature");
+        let valid_sign = &output.stdout.as_slice()[6..];
+        let signature = Signature::from_compact(valid_sign).expect("Invalid signature");
         let serialized = SerializedSignature::from_signature(&signature);
         let signature_bytes: &[u8] = serialized.as_ref();
         let recoverable_signature_false = RecoverableSignature::from_compact(signature_bytes, RecoveryId::from_i32(0).expect("Invalid recovery id 0"));
