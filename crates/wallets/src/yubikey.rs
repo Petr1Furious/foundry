@@ -1,15 +1,19 @@
+use std::str::FromStr;
+
 use alloy_consensus::SignableTransaction;
 use alloy_dyn_abi::{Eip712Domain, TypedData};
 use alloy_primitives::{hex, Address, ChainId, PrimitiveSignature, B256};
 use alloy_signer::k256::ecdsa::signature;
 use alloy_signer::Signer;
+use alloy_signer::sign_transaction_with_chain_id;
 use alloy_sol_types::SolStruct;
 
 extern crate secp256k1;
+
 use crate::error::WalletSignerError;
 use std::process::{Command, Output};
-use secp256k1::{Secp256k1, Signature};
-use secp256k1::ecdsa::{RecoverableSignature, RecoveryId, SerializedSignature, Signature as EcdsaSignature};
+use secp256k1::Secp256k1;
+use secp256k1::ecdsa::{RecoverableSignature, RecoveryId, SerializedSignature, Signature};
 
 use async_trait::async_trait;
 
@@ -17,6 +21,8 @@ pub type Result<T> = std::result::Result<T, WalletSignerError>;
 
 #[derive(Debug)]
 pub struct YubikeySignerStub {
+    addr: Address,
+    chain_id: Option<ChainId>
 }
 
 pub type YubikeyHDPath = Vec<u8>;
@@ -24,39 +30,57 @@ pub type YubikeyHDPath = Vec<u8>;
 impl YubikeySignerStub {
     // create signer and store address specified in `hd_path`
     pub async fn from_hd_path(hd_path: YubikeyHDPath) -> Result<Self> {
-        todo!()
+        let addr = Address::from_slice(&hd_path);
+        Ok(Self {
+            addr,
+            chain_id: None,
+        })
     }
 
     pub async fn get_address(&self) -> Result<Address> {
-        todo!()
+        Ok(self.addr)
+    }
+
+    // helper which converts a derivation path to [u32]
+    fn convert_path(derivation: &[u8]) -> Vec<u32> {
+        let derivation = core::str::from_utf8(derivation).unwrap();
+        let elements = derivation.split('/').skip(1).collect::<Vec<_>>();
+
+        let mut path = vec![];
+        for derivation_index in elements {
+            let hardened = derivation_index.contains('\'');
+            let mut index = derivation_index.replace('\'', "").parse::<u32>().unwrap();
+            if hardened {
+                index |= 0x80000000;
+            }
+            path.push(index);
+        }
+
+        path
     }
 }
+
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl alloy_network::TxSigner<PrimitiveSignature> for YubikeySignerStub {
     fn address(&self) -> Address {
-        unimplemented!("address: unimplemented")
+        self.addr
     }
 
     #[inline]
     async fn sign_transaction(
         &self,
-        _tx: &mut dyn SignableTransaction<PrimitiveSignature>,
+        tx: &mut dyn SignableTransaction<PrimitiveSignature>,
     ) -> alloy_signer::Result<PrimitiveSignature> {
-        unimplemented!()
+        sign_transaction_with_chain_id!(self, tx, self.sign_hash(&tx.signature_hash()).await)
     }
 }
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl Signer for YubikeySignerStub {
-    async fn sign_hash(&self, _hash: &B256) -> alloy_signer::Result<PrimitiveSignature> {
-        todo!()
-    }
-
-    #[inline]
-    async fn sign_message(&self, message: &[u8]) -> alloy_signer::Result<PrimitiveSignature> {
-        let hex = &hex::encode(&message);
+    async fn sign_hash(&self, hash: &B256) -> alloy_signer::Result<PrimitiveSignature> {
+        let hex = &hex::encode(&hash);
         let args = vec!["sign", hex];
         let output = Command::new("./yubikey_wallet_signer")
             .args(args)
@@ -86,31 +110,17 @@ impl Signer for YubikeySignerStub {
     }
 
     #[inline]
-    async fn sign_typed_data<T: SolStruct + Send + Sync>(
-        &self,
-        payload: &T,
-        domain: &Eip712Domain,
-    ) -> alloy_signer::Result<PrimitiveSignature> {
-        todo!()
-    }
-
-    #[inline]
-    async fn sign_dynamic_typed_data(&self, payload: &TypedData) -> alloy_signer::Result<PrimitiveSignature> {
-        todo!()
-    }
-
-    #[inline]
     fn address(&self) -> Address {
-        todo!()
+        self.addr
     }
 
     #[inline]
     fn chain_id(&self) -> Option<ChainId> {
-        todo!()
+        self.chain_id
     }
 
     #[inline]
     fn set_chain_id(&mut self, chain_id: Option<ChainId>) {
-        todo!()
+        self.chain_id = chain_id;
     }
 }
