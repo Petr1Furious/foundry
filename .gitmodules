@@ -1,0 +1,3 @@
+[submodule "target/debug/temp_delete/lib/forge-std"]
+	path = target/debug/temp_delete/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std

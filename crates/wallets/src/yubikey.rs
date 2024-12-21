@@ -3,11 +3,13 @@ use std::str::FromStr;
 use alloy_consensus::SignableTransaction;
 use alloy_dyn_abi::{Eip712Domain, TypedData};
 use alloy_primitives::address;
+use alloy_primitives::ruint::aliases::U128;
 use alloy_primitives::{hex, Address, ChainId, PrimitiveSignature, B256};
 use alloy_signer::k256::ecdsa::signature;
 use alloy_signer::Signer;
 use alloy_signer::sign_transaction_with_chain_id;
 use alloy_sol_types::SolStruct;
+use foundry_config::figment::value;
 
 extern crate secp256k1;
 
@@ -66,8 +68,8 @@ impl Signer for YubikeySignerStub {
         println!("signing...");
 
         let hex = &hex::encode(&hash);
-        let args = vec!["sign", hex];
-        let output = Command::new("./yubikey_wallet_signer")
+        let args = vec!["sign", hex, "--hash", "keccak256"];
+        let output = Command::new("/usr/bin/yubikey_wallet_signer")
             .args(args)
             .output().unwrap();
         
@@ -76,10 +78,27 @@ impl Signer for YubikeySignerStub {
             return Err(alloy_signer::Error::Other(Box::<dyn std::error::Error + Send + Sync + 'static>::from(stderr.to_string())));
         }
         
-        let valid_sign = &output.stdout.as_slice()[6..];
+        let out_slice = &output.stdout.as_slice();
+        let uncompressed = &out_slice[out_slice.len() - 128..];
+        // compact signature is 64 bytes
+        
+        let mut compressed = Vec::with_capacity(uncompressed.len() / 2);
+        for chunk in uncompressed.chunks(2) {
+            if chunk.len() == 2 {
+                let combined = (chunk[0] << 4) | (chunk[1] & 0x0F);
+                compressed.push(combined);
+            }
+        }
+        
+        let valid_sign: &[u8] = compressed.as_slice();
+        if valid_sign.len() != 64 {
+            let error_message = format!("Invalid signature length: expected 64, got {}", valid_sign.len());
+            return Err(alloy_signer::Error::Other(Box::<dyn std::error::Error + Send + Sync + 'static>::from(error_message)));
+        }
         let signature = Signature::from_compact(valid_sign).expect("Invalid signature");
         let serialized = SerializedSignature::from_signature(&signature);
         let signature_bytes: &[u8] = serialized.as_ref();
+        return Ok(PrimitiveSignature::from_bytes_and_parity(signature_bytes, true));
         let recoverable_signature_false = RecoverableSignature::from_compact(signature_bytes, RecoveryId::from_i32(0).expect("Invalid recovery id 0"));
         
         if recoverable_signature_false.is_ok() {
