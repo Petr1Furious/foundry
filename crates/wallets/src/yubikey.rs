@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use alloy_consensus::SignableTransaction;
 use alloy_dyn_abi::{Eip712Domain, TypedData};
+use alloy_primitives::address;
 use alloy_primitives::{hex, Address, ChainId, PrimitiveSignature, B256};
 use alloy_signer::k256::ecdsa::signature;
 use alloy_signer::Signer;
@@ -29,8 +30,8 @@ pub type YubikeyHDPath = Vec<u8>;
 
 impl YubikeySignerStub {
     // create signer and store address specified in `hd_path`
-    pub async fn from_hd_path(hd_path: YubikeyHDPath) -> Result<Self> {
-        let addr = Address::from_slice(&hd_path);
+    pub async fn from_hd_path(_hd_path: YubikeyHDPath) -> Result<Self> {
+        let addr = address!("15A209f341eBddc76CBe34F8Df939be44298a769");
         Ok(Self {
             addr,
             chain_id: None,
@@ -62,6 +63,8 @@ impl alloy_network::TxSigner<PrimitiveSignature> for YubikeySignerStub {
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl Signer for YubikeySignerStub {
     async fn sign_hash(&self, hash: &B256) -> alloy_signer::Result<PrimitiveSignature> {
+        println!("signing...");
+
         let hex = &hex::encode(&hash);
         let args = vec!["sign", hex];
         let output = Command::new("./yubikey_wallet_signer")

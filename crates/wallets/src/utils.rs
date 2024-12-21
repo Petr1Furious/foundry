@@ -69,13 +69,13 @@ Make sure it's connected and unlocked, with no other desktop wallet apps open."
 }
 
 /// Creates [WalletSigner] instance from given YubiKey parameters
-pub async fn create_yubikey_signer(hd_path: Option<&str>, _mnemonic_index: u32) -> Result<WalletSigner> {
-    let hd_path = hd_path.map(|s| s.as_bytes().to_vec()).wrap_err_with(|| {
-        "\
-        HD path must be specified for YubiKey device."
-    })?;
+pub async fn create_yubikey_signer(_hd_path: Option<&str>, _mnemonic_index: u32) -> Result<WalletSigner> {
+    // let hd_path = hd_path.map(|s| s.as_bytes().to_vec()).wrap_err_with(|| {
+    //     "\
+    //     HD path must be specified for YubiKey device."
+    // })?;
     
-    WalletSigner::from_yubikey_path(hd_path).await.wrap_err_with(|| {
+    WalletSigner::from_yubikey_path(Default::default()).await.wrap_err_with(|| {
         "\
         Could not connect to YubiKey device."
     })
